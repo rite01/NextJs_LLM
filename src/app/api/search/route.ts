@@ -1,11 +1,10 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { dbConnect } from "../../database/mongodb";
 import Category from "../../models/Category";
 import Listing from "../../models/Listing";
 import { parseNaturalLanguageQuery } from "../../lib/queryParser";
 
 interface AttributeFilter {
-  [key: string]: string | string[];
+  [key: string]: string | string[] | number | Record<string, any>;
 }
 
 interface FacetResult {
@@ -73,11 +72,16 @@ export async function GET(request: Request): Promise<Response> {
     const baseFilter: any = {};
     if (category) baseFilter.categoryId = category._id;
 
-    // <-- UPDATED filter application here -->
     for (const [key, value] of Object.entries(filters)) {
-      if (value) {
+      if (value === undefined || value === null) continue;
+
+      if (key === "price") {
+        baseFilter.price = value;
+      } else {
         if (Array.isArray(value)) {
           baseFilter[`attributes.${key}`] = { $in: value };
+        } else if (typeof value === "object" && "$in" in value) {
+          baseFilter[`attributes.${key}`] = value;
         } else {
           baseFilter[`attributes.${key}`] = value;
         }

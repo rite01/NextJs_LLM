@@ -1,4 +1,5 @@
 "use client";
+import styles from "./SearchPage.module.css";
 import { useSearchListings } from "./useSearchListings.hook";
 
 export default function SearchPage() {
@@ -17,22 +18,8 @@ export default function SearchPage() {
   } = useSearchListings();
 
   return (
-    <div style={{ display: "flex", padding: "2rem", gap: "2rem" }}>
-      <style jsx global>{`
-        @keyframes pulse {
-          0% {
-            background-color: #f0f0f0;
-          }
-          50% {
-            background-color: #e0e0e0;
-          }
-          100% {
-            background-color: #f0f0f0;
-          }
-        }
-      `}</style>
-
-      <aside style={{ flex: "1", maxWidth: "300px" }}>
+    <div className={styles.container}>
+      <aside className={styles.aside}>
         <h2>Search Listings</h2>
 
         <input
@@ -40,25 +27,13 @@ export default function SearchPage() {
           value={q}
           placeholder="Search..."
           onChange={(e) => setQ(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "0.75rem",
-            marginBottom: "1rem",
-            borderRadius: "4px",
-            border: "1px solid #ccc",
-          }}
+          className={styles.input}
         />
 
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "0.75rem",
-            marginBottom: "1.5rem",
-            borderRadius: "4px",
-            border: "1px solid #ccc",
-          }}
+          className={styles.select}
         >
           {categories.map(({ slug, name }) => (
             <option key={slug} value={slug}>
@@ -75,10 +50,7 @@ export default function SearchPage() {
             <strong style={{ textTransform: "capitalize" }}>{key}</strong>
             <div style={{ marginTop: "0.5rem" }}>
               {values.map(({ value, count }) => (
-                <label
-                  key={value}
-                  style={{ display: "block", marginBottom: "0.25rem" }}
-                >
+                <label key={value} className={styles.filterLabel}>
                   <input
                     type="checkbox"
                     checked={filters[key]?.includes(value) || false}
@@ -93,23 +65,13 @@ export default function SearchPage() {
         ))}
       </aside>
 
-      <main style={{ flex: "3" }}>
+      <main className={styles.main}>
         <h3>Results ({results.length})</h3>
 
         {loading ? (
           <ul style={{ listStyle: "none", padding: 0 }}>
             {Array.from({ length: 5 }).map((_, idx) => (
-              <li
-                key={idx}
-                style={{
-                  border: "1px solid #e0e0e0",
-                  borderRadius: "6px",
-                  padding: "1rem",
-                  marginBottom: "1rem",
-                  backgroundColor: "#f6f6f6",
-                  animation: "pulse 1.5s infinite",
-                }}
-              >
+              <li key={idx} className={styles.loadingItem}>
                 <div
                   style={{
                     height: "20px",
@@ -118,29 +80,9 @@ export default function SearchPage() {
                     marginBottom: "0.5rem",
                   }}
                 />
-                <div
-                  style={{
-                    height: "15px",
-                    width: "80%",
-                    background: "#e0e0e0",
-                    marginBottom: "0.5rem",
-                  }}
-                />
-                <div
-                  style={{
-                    height: "15px",
-                    width: "40%",
-                    background: "#e0e0e0",
-                    marginBottom: "0.5rem",
-                  }}
-                />
-                <div
-                  style={{
-                    height: "15px",
-                    width: "70%",
-                    background: "#ddd",
-                  }}
-                />
+                <div className={styles.loadingBar} style={{ width: "80%" }} />
+                <div className={styles.loadingBar} style={{ width: "40%" }} />
+                <div className={styles.loadingBar} style={{ width: "70%" }} />
               </li>
             ))}
           </ul>
@@ -149,16 +91,7 @@ export default function SearchPage() {
         ) : (
           <ul style={{ listStyle: "none", padding: 0 }}>
             {results.map((item) => (
-              <li
-                key={item._id}
-                style={{
-                  border: "1px solid #e0e0e0",
-                  borderRadius: "6px",
-                  padding: "1rem",
-                  marginBottom: "1rem",
-                  boxShadow: "0 2px 5px rgba(0, 0, 0, 0.05)",
-                }}
-              >
+              <li key={item._id} className={styles.resultItem}>
                 <h4>{item.title}</h4>
                 <p style={{ color: "#555" }}>{item.description}</p>
                 <p>
