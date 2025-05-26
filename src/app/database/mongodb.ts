@@ -1,9 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import mongoose from "mongoose";
 
-const MONGODB_URI: any =
-  process.env.MONGODB_URI ||
-  "mongodb+srv://ritesh:4o4y4AIsijmtt3RD@cluster0.5fvzn0m.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+const MONGODB_URI: any = process.env.MONGODB_URI || "Add-your-MongoDB-URI-here";
 const cached = (global as any).mongoose || { conn: null, promise: null };
 
 export async function dbConnect() {
