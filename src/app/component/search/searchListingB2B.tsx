@@ -28,12 +28,14 @@ export default function SearchPage() {
           placeholder="Search..."
           onChange={(e) => setQ(e.target.value)}
           className={styles.input}
+          aria-label="Search listings"
         />
 
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value)}
           className={styles.select}
+          aria-label="Select category"
         >
           {categories.map(({ slug, name }) => (
             <option key={slug} value={slug}>
@@ -46,22 +48,36 @@ export default function SearchPage() {
         {Object.keys(facets).length === 0 && <p>No filters available</p>}
 
         {Object.entries(facets).map(([key, values]) => (
-          <div key={key} style={{ marginBottom: "1rem" }}>
-            <strong style={{ textTransform: "capitalize" }}>{key}</strong>
-            <div style={{ marginTop: "0.5rem" }}>
-              {values.map(({ value, count }) => (
-                <label key={value} className={styles.filterLabel}>
-                  <input
-                    type="checkbox"
-                    checked={filters[key]?.includes(value) || false}
-                    onChange={() => toggleFilter(key, value)}
-                    style={{ marginRight: "0.5rem" }}
-                  />
-                  {value} ({count})
-                </label>
-              ))}
-            </div>
-          </div>
+          <fieldset
+            key={key}
+            style={{ marginBottom: "1rem", border: "none", padding: 0 }}
+          >
+            <legend
+              style={{
+                textTransform: "capitalize",
+                fontWeight: "600",
+                marginBottom: "0.5rem",
+                color: "#222",
+              }}
+            >
+              {key}
+            </legend>
+            {values.map(({ value, count }) => (
+              <label
+                key={value}
+                htmlFor={`${key}-${value}`}
+                className={styles.filterLabel}
+              >
+                <input
+                  id={`${key}-${value}`}
+                  type="checkbox"
+                  checked={filters[key]?.includes(value) || false}
+                  onChange={() => toggleFilter(key, value)}
+                />
+                {value} ({count})
+              </label>
+            ))}
+          </fieldset>
         ))}
       </aside>
 
@@ -78,6 +94,7 @@ export default function SearchPage() {
                     width: "60%",
                     background: "#ddd",
                     marginBottom: "0.5rem",
+                    borderRadius: "6px",
                   }}
                 />
                 <div className={styles.loadingBar} style={{ width: "80%" }} />
@@ -93,9 +110,9 @@ export default function SearchPage() {
             {results.map((item) => (
               <li key={item._id} className={styles.resultItem}>
                 <h4>{item.title}</h4>
-                <p style={{ color: "#555" }}>{item.description}</p>
+                <p>{item.description}</p>
                 <p>
-                  <strong>Price:</strong> ${item.price} |{" "}
+                  <strong>Price:</strong> ${item.price} &nbsp;|&nbsp;{" "}
                   <strong>Location:</strong> {item.location}
                 </p>
                 <p>
@@ -109,7 +126,9 @@ export default function SearchPage() {
           </ul>
         )}
 
-        {!hasMore && results.length > 0 && !loading && <p>End of results</p>}
+        {!hasMore && results.length > 0 && !loading && (
+          <p style={{ marginTop: "1rem", color: "#666" }}>End of results</p>
+        )}
       </main>
     </div>
   );

@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import mongoose from "mongoose";
 
-const MONGODB_URI: any = process.env.MONGODB_URI || "Add-your-MongoDB-URI-here";
+const MONGODB_URI: any =
+  process.env.MONGODB_URI || "your-default-mongodb-uri-here";
 const cached = (global as any).mongoose || { conn: null, promise: null };
 
 export async function dbConnect() {

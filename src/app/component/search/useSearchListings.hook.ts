@@ -60,6 +60,7 @@ export function useSearchListings() {
     ];
     setCategories(fetchedCategories);
     setCategory(fetchedCategories[0]?.slug || "all");
+    setFilters({});
   }, []);
 
   useEffect(() => {
@@ -146,12 +147,17 @@ export function useSearchListings() {
     });
   };
 
+  const changeCategory = (newCategory: string) => {
+    setCategory(newCategory);
+    setFilters({});
+  };
+
   return {
     q,
     setQ,
     categories,
     category,
-    setCategory,
+    setCategory: changeCategory,
     filters,
     results,
     facets,
