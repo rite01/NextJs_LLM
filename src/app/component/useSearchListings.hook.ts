@@ -31,6 +31,7 @@ type SearchResponse = {
 
 export function useSearchListings() {
   const [q, setQ] = useState<string>("");
+  const [debouncedQ, setDebouncedQ] = useState<string>("");
   const [categories, setCategories] = useState<Category[]>([]);
   const [category, setCategory] = useState<string>("all");
   const [filters, setFilters] = useState<Filters>({});
@@ -41,6 +42,14 @@ export function useSearchListings() {
   const [hasMore, setHasMore] = useState<boolean>(true);
 
   const loadingRef = useRef(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQ(q);
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [q]);
 
   useEffect(() => {
     const fetchedCategories: Category[] = [
@@ -57,7 +66,7 @@ export function useSearchListings() {
     setResults([]);
     setPage(1);
     setHasMore(true);
-  }, [q, category, filters]);
+  }, [debouncedQ, category, filters]);
 
   const fetchResults = useCallback(
     async (pageToFetch: number) => {
@@ -70,7 +79,7 @@ export function useSearchListings() {
       const limit = 20;
 
       const url = `/api/search?q=${encodeURIComponent(
-        q
+        debouncedQ
       )}&category=${categoryParam}&filters=${filterStr}&page=${pageToFetch}&limit=${limit}`;
 
       try {
@@ -97,7 +106,7 @@ export function useSearchListings() {
         loadingRef.current = false;
       }
     },
-    [q, category, filters]
+    [debouncedQ, category, filters]
   );
 
   useEffect(() => {

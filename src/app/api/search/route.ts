@@ -1,98 +1,16 @@
-import OpenAI from "openai";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { dbConnect } from "../../database/mongodb";
 import Category from "../../models/Category";
 import Listing from "../../models/Listing";
+import { parseNaturalLanguageQuery } from "../../lib/queryParser";
+
+interface AttributeFilter {
+  [key: string]: string | string[];
+}
 
 interface FacetResult {
   _id: string;
   count: number;
-}
-
-interface CategoryType {
-  name: string;
-  slug: string;
-  synonyms?: string[];
-  attributeSchema?: {
-    key: string;
-    options: { value: string }[];
-  }[];
-}
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || "your-api-key",
-});
-
-async function parseQueryWithLLM(
-  q: string,
-  categories: CategoryType[],
-  attributeFilters: Record<string, string[]>
-): Promise<{ filters: Record<string, any>; categorySlug: string }> {
-  if (!q.trim()) return { filters: {}, categorySlug: "" };
-
-  const categoryList = categories
-    .map((c) =>
-      c.synonyms && c.synonyms.length
-        ? `- ${c.name} (slug: ${c.slug}, synonyms: ${c.synonyms.join(", ")})`
-        : `- ${c.name} (slug: ${c.slug})`
-    )
-    .join("\n");
-
-  const prompt = `
-You are an assistant that parses user search queries into structured filters and categories.
-
-User query: "${q}"
-
-Categories:
-${categoryList}
-
-Attributes and possible values:
-${Object.entries(attributeFilters)
-  .map(([key, values]) => `- ${key}: ${values.join(", ")}`)
-  .join("\n")}
-
-Price can be specified as "price min max", "under X", "over Y", or ranges.
-
-Return a JSON object:
-{
-  "categorySlug": "slug or empty string",
-  "filters": {
-    "attributeKey": "value or array or {min,max}",
-    ...
-  }
-}
-`;
-
-  try {
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are an assistant that parses user search queries into structured filters and categories.",
-        },
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-      max_tokens: 300,
-      temperature: 0,
-    });
-
-    const message = completion.choices[0]?.message?.content?.trim() || "{}";
-
-    const sanitized = message
-      .replace(/^```json/g, "")
-      .replace(/^```/, "")
-      .replace(/```$/, "")
-      .trim();
-
-    return JSON.parse(sanitized);
-  } catch (err) {
-    console.error("LLM parsing error:", err);
-    return { filters: {}, categorySlug: "" };
-  }
 }
 
 export async function GET(request: Request): Promise<Response> {
@@ -105,13 +23,13 @@ export async function GET(request: Request): Promise<Response> {
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
     const limit = Math.max(1, parseInt(searchParams.get("limit") || "10", 10));
 
-    const categories: any = await Category.find(
+    const categories = await Category.find(
       {},
-      { name: 1, slug: 1, synonyms: 1, attributeSchema: 1 }
+      { name: 1, slug: 1, attributeSchema: 1 }
     ).lean();
 
     const attributeFilters: Record<string, string[]> = {};
-    categories.forEach((cat: any) => {
+    categories.forEach((cat) => {
       cat.attributeSchema?.forEach((attr: any) => {
         if (!attributeFilters[attr.key]) attributeFilters[attr.key] = [];
         if (Array.isArray(attr.options)) {
@@ -122,22 +40,18 @@ export async function GET(request: Request): Promise<Response> {
       });
     });
 
-    const parsed = await parseQueryWithLLM(q, categories, attributeFilters);
+    const parsed = await parseNaturalLanguageQuery(q, {
+      categories,
+      attributeFilters,
+    });
 
-    let filters: any = {};
+    let filters: AttributeFilter = {};
     try {
-      const cleanedFilters = filtersRaw
-        .replace(/^```json/g, "")
-        .replace(/^```/, "")
-        .replace(/```$/, "")
-        .trim();
-
       filters = {
         ...parsed.filters,
-        ...JSON.parse(cleanedFilters),
+        ...JSON.parse(filtersRaw),
       };
-    } catch (err) {
-      console.error("Invalid filters JSON:", err);
+    } catch {
       return new Response("Invalid filters JSON", { status: 400 });
     }
 
@@ -159,23 +73,7 @@ export async function GET(request: Request): Promise<Response> {
     const baseFilter: any = {};
     if (category) baseFilter.categoryId = category._id;
 
-    if (filters.price) {
-      if (
-        typeof filters.price === "object" &&
-        filters.price !== null &&
-        (filters?.price?.min !== undefined || filters.price.max !== undefined)
-      ) {
-        baseFilter.price = {};
-        if (filters.price.min !== undefined)
-          baseFilter.price.$gte = filters.price.min;
-        if (filters.price.max !== undefined)
-          baseFilter.price.$lte = filters.price.max;
-      } else if (typeof filters.price === "number") {
-        baseFilter.price = filters.price;
-      }
-      delete filters.price;
-    }
-
+    // <-- UPDATED filter application here -->
     for (const [key, value] of Object.entries(filters)) {
       if (value) {
         if (Array.isArray(value)) {
@@ -252,7 +150,7 @@ export async function GET(request: Request): Promise<Response> {
         headers: { "Content-Type": "application/json" },
       }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("Search API Error:", error);
     return new Response("Internal Server Error", { status: 500 });
   }

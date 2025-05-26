@@ -13,6 +13,8 @@
   },
   "dependencies": {
     "@google-cloud/aiplatform": "^4.2.0",
+    "compromise": "^14.14.4",
+    "fast-fuzzy": "^1.12.0",
     "glob": "^11.0.2",
     "mongodb": "^6.16.0",
     "mongoose": "^8.15.0",
