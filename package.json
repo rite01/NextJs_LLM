@@ -1,0 +1,36 @@
+{
+  "name": "my-next14-app",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "build:seed": "tsc -p tsconfig.seed.json",
+    "seed": "npx tsx src/app/scripts/seed.ts"
+  },
+  "dependencies": {
+    "@google-cloud/aiplatform": "^4.2.0",
+    "glob": "^11.0.2",
+    "mongodb": "^6.16.0",
+    "mongoose": "^8.15.0",
+    "next": "14.2.29",
+    "openai": "^4.103.0",
+    "react": "^18",
+    "react-dom": "^18",
+    "rimraf": "^6.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "eslint": "^9.27.0",
+    "eslint-config-next": "14.2.29",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}
